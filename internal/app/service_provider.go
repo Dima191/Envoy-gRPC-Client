@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	"log/slog"
 	xdscache "xds_server/internal/cache"
 	certclient "xds_server/internal/client/cert"
@@ -10,6 +9,9 @@ import (
 	routesclient "xds_server/internal/client/routes"
 	routesclientimpl "xds_server/internal/client/routes/implementation"
 	xdsservice "xds_server/internal/service"
+	serviceimpl "xds_server/internal/service/implementation"
+
+	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 )
 
 type serviceProvider struct {
@@ -31,6 +33,24 @@ type serviceProvider struct {
 	unprotectedListenerPort uint32
 
 	logger *slog.Logger
+}
+
+func (sp *serviceProvider) Service(ctx context.Context) (xdsservice.Service, error) {
+	if sp.srv == nil {
+		client, err := sp.CertClient()
+		if err != nil {
+			return nil, err
+		}
+
+		cdsCache, ldsCache, rdsCache, err := sp.Cache(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		sp.srv = serviceimpl.New(cdsCache, ldsCache, rdsCache, client, sp.nodeID, sp.protectedListenerPort, sp.unprotectedListenerPort, sp.logger)
+	}
+
+	return sp.srv, nil
 }
 
 func (sp *serviceProvider) CertClient() (certclient.Client, error) {
