@@ -7,6 +7,7 @@ import (
 	"time"
 	xdsconfig "xds_server/internal/config"
 
+	"github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"google.golang.org/grpc"
 )
 
@@ -20,6 +21,10 @@ const (
 type App struct {
 	xdsGRPC *grpc.Server
 	emGRPC  *grpc.Server
+
+	cdsImpl server.Server
+	ldsImpl server.Server
+	rdsImpl server.Server
 
 	ServiceProvider *serviceProvider
 
@@ -91,6 +96,17 @@ func (a *App) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (a *App) Stop() {
+	a.xdsGRPC.GracefulStop()
+	a.emGRPC.GracefulStop()
+
+	if a.ServiceProvider.certCl != nil {
+		if err := a.ServiceProvider.certCl.CloseConn(); err != nil {
+			a.logger.Error(err.Error())
+		}
+	}
 }
 
 func New(ctx context.Context, configPath string, logger *slog.Logger, nodeID string) (*App, error) {
