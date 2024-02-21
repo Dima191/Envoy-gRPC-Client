@@ -5,6 +5,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"time"
+	"xds_server/internal/api"
 	xdsconfig "xds_server/internal/config"
 
 	"github.com/envoyproxy/go-control-plane/pkg/server/v3"
@@ -25,6 +26,8 @@ type App struct {
 	cdsImpl server.Server
 	ldsImpl server.Server
 	rdsImpl server.Server
+
+	emImpl *api.Implementation
 
 	ServiceProvider *serviceProvider
 
