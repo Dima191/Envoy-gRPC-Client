@@ -1,0 +1,6 @@
+cert_server_port:
+route_server_port:
+endpoint_management_port:
+xds_port:
+envoy_protected_listen_port:
+envoy_unprotected_listen_port:
